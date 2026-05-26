@@ -1,0 +1,158 @@
+import { useState, useEffect } from "react";
+import { addDays, isSaturday, isSunday, isMonday, isTuesday, isWednesday, isThursday, isFriday, nextDay, format } from "date-fns";
+
+export interface SchedulingConfig {
+  daysBetween: number;
+  dailyLimit: number;
+  activeDays: number[]; // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  warmupEnabled: boolean;
+  warmupStart: number;
+  warmupIncrement: number;
+}
+
+export function getDefaultConfig(): SchedulingConfig {
+  return { 
+    daysBetween: 3, 
+    dailyLimit: 10, 
+    activeDays: [1, 2, 3, 4, 5],
+    warmupEnabled: false,
+    warmupStart: 5,
+    warmupIncrement: 2
+  }; // Default: Mon, Tue, Wed, Thu, Fri
+}
+
+/**
+ * Hook to safely access scheduling config with hydration awareness
+ */
+export function useSchedulingConfig() {
+  const [config, setConfig] = useState<SchedulingConfig>(getDefaultConfig());
+  
+  useEffect(() => {
+    const load = () => {
+      const saved = localStorage.getItem("scheduling_config");
+      if (saved) {
+        try {
+          setConfig(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse scheduling config", e);
+        }
+      }
+    };
+
+    load();
+    window.addEventListener("scheduling_config_updated", load);
+    return () => window.removeEventListener("scheduling_config_updated", load);
+  }, []);
+
+  return config;
+}
+
+
+/**
+ * Helper class to track daily limits while scheduling many items
+ */
+export class ScheduleTracker {
+  private map: Map<string, number> = new Map();
+  private config: SchedulingConfig;
+
+  private startDate: string | null = null;
+
+  constructor(config: SchedulingConfig, existingCounts?: Map<string, number>) {
+    this.config = config;
+    if (existingCounts) {
+      this.map = new Map(existingCounts);
+    }
+  }
+
+  setStartDate(date: Date) {
+    this.startDate = format(date, "yyyy-MM-dd");
+  }
+
+  getLimitForDate(date: Date): number {
+    if (!this.config.warmupEnabled || !this.startDate) return this.config.dailyLimit;
+    
+    // Calculate days since start
+    const start = new Date(this.startDate);
+    const diffTime = date.getTime() - start.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return this.config.dailyLimit;
+    
+    const dynamicLimit = this.config.warmupStart + (diffDays * this.config.warmupIncrement);
+    return Math.min(dynamicLimit, this.config.dailyLimit);
+  }
+
+  getNextAvailableDate(startDate: Date, minGapDays: number = 0): Date {
+    let current = new Date(startDate);
+    
+    // 1. Handle the gap by counting only active days
+    let gapsCounted = 0;
+    while (gapsCounted < minGapDays) {
+      current.setDate(current.getDate() + 1);
+      if (this.config.activeDays.includes(current.getDay())) {
+        gapsCounted++;
+      }
+    }
+
+    // 2. Find the first available active day that is under the limit
+    let safety = 0;
+    while (safety < 365) { // Prevent infinite loops
+      const dateStr = format(current, "yyyy-MM-dd");
+      const count = this.map.get(dateStr) || 0;
+      
+      const activeDays = this.config.activeDays.map(Number);
+      const isAllowedDay = activeDays.includes(current.getDay());
+      
+      const limit = this.getLimitForDate(current);
+      
+      if (isAllowedDay && count < limit) {
+        this.map.set(dateStr, count + 1);
+        return new Date(current);
+      }
+      current.setDate(current.getDate() + 1);
+      safety++;
+    }
+    return current; // Fallback
+  }
+
+  addCount(dateStr: string) {
+    this.map.set(dateStr, (this.map.get(dateStr) || 0) + 1);
+  }
+
+  getDailyCounts(): Map<string, number> {
+    return new Map(this.map);
+  }
+}
+
+/**
+ * Calculates the next valid mailing date based on config.
+ */
+export function getNextValidDate(startDate: Date, activeDays: number[]): Date {
+  let date = new Date(startDate);
+  let attempts = 0;
+  
+  while (!activeDays.includes(date.getDay()) && attempts < 14) {
+    date.setDate(date.getDate() + 1);
+    attempts++;
+  }
+  
+  return date;
+}
+
+/**
+ * Adds an offset to a date and then finds the next valid date.
+ */
+export function getOffsetValidDate(startDate: Date, days: number, activeDays: number[]): Date {
+  let current = new Date(startDate);
+  let gapsCounted = 0;
+  
+  while (gapsCounted < days) {
+    current.setDate(current.getDate() + 1);
+    if (activeDays.includes(current.getDay())) {
+      gapsCounted++;
+    }
+  }
+  
+  return getNextValidDate(current, activeDays);
+}
+
