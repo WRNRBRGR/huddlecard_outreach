@@ -82,27 +82,34 @@ function parsePitch(raw: string | null): ParsedPitch {
   return { ...defaults, stage: (stageMatch ? stageMatch[1] : "INTRO") as ParsedPitch["stage"] };
 }
 
-function getSASendWindow(recipientTimezone: string): string {
+function getPartnerSendWindow(recipientTimezone: string, partnerColor: string | null): string {
   const now = new Date();
-  const saHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Johannesburg", hour: "numeric", hour12: false }).format(now));
+  const isMartin = partnerColor === "rose";
+  const senderTimezone = isMartin ? "America/New_York" : "Africa/Johannesburg";
+  const senderLabel = isMartin ? "ET" : "SAST";
+
+  const senderHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: senderTimezone, hour: "numeric", hour12: false }).format(now));
   const utcHour = now.getUTCHours();
-  const saOffset = ((saHour - utcHour) + 24) % 24;
+  const senderOffset = ((senderHour - utcHour) + 24) % 24;
+
   const recipHour = parseInt(new Intl.DateTimeFormat("en-US", { timeZone: recipientTimezone, hour: "numeric", hour12: false }).format(now));
   const recipOffset = ((recipHour - utcHour) + 24) % 24;
-  const diff = saOffset - recipOffset;
+
+  const diff = senderOffset - recipOffset;
   const startH = (9 + diff + 24) % 24;
   const endH = (12 + diff + 24) % 24;
+
   const fmt = (h: number) => {
     const ampm = h >= 12 ? "pm" : "am";
     const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
     return `${h12}${ampm}`;
   };
-  return `${fmt(startH)} – ${fmt(endH)} SAST`;
+  return `${fmt(startH)} – ${fmt(endH)} ${senderLabel}`;
 }
 
 const PARTNER_COLORS: Record<string, string> = {
-  indigo: "bg-indigo-500 dark:shadow-[0_0_10px_rgba(99,102,241,0.5)]",
-  rose: "bg-rose-500 dark:shadow-[0_0_10px_rgba(244,63,94,0.5)]",
+  indigo: "bg-[#6d40e3] shadow-[0_0_10px_rgba(109,64,227,0.5)]",
+  rose: "bg-[#dff8a7] text-slate-900 border border-[#c4e687]/50 shadow-[0_0_10px_rgba(223,248,167,0.4)]",
 };
 
 export default function DailyWorkConsole({ params }: { params: Promise<{ date: string }> }) {
@@ -293,12 +300,12 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
           <div className="flex flex-col items-end space-y-2">
             <div className="flex items-center space-x-4 mb-1">
               <div className="flex items-center space-x-1.5">
-                <div className="w-2 h-2 rounded-full bg-indigo-500 dark:shadow-[0_0_5px_rgba(99,102,241,0.5)]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#6d40e3] shadow-[0_0_5px_rgba(109,64,227,0.5)]"></div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Werner</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <div className="w-2 h-2 rounded-full bg-rose-500 dark:shadow-[0_0_5px_rgba(244,63,94,0.5)]"></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Louis</span>
+                <div className="w-2 h-2 rounded-full bg-[#dff8a7] border border-[#c4e687]/50 shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Martin</span>
               </div>
             </div>
             <div className="flex items-center space-x-3 bg-[var(--surface)] border border-[var(--border)] px-4 py-2 rounded-xl">
@@ -329,7 +336,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
             
             const firstName = lead.name.split(" ")[0];
             const companyName = lead.agency || "Independent";
-            const sendWindow = getSASendWindow(lead.timezone);
+            const sendWindow = getPartnerSendWindow(lead.timezone, assignedColor);
 
             // Prioritize: 1. Saved variation data, 2. Global template fallback
             const stageKey = stage as "INTRO" | "SHOWREELS" | "CURTAIN_CALL";
@@ -401,7 +408,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
                             </a>
                             <button
                               onClick={() => {
-                                const sender = assignedColor === "indigo" ? "Werner" : assignedColor === "rose" ? "Louis" : "Werner";
+                                const sender = assignedColor === "indigo" ? "Werner" : assignedColor === "rose" ? "Martin" : "Werner";
                                 const note = `Hi there ${firstName},\n\nI work at HuddleCard. We help teams keep birthdays and work anniversaries on autopilot using group greeting cards that everyone signs together (with video, photos, and voice notes). I would love to connect and see if we can help your team stay connected!\n\nGreetings,\n${sender}`;
                                 copyToClipboard(note, `linkedin-note-small-${lead.id}`);
                               }}
@@ -516,8 +523,8 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
                           className={cn(
                             "btn-primary w-full flex items-center justify-center text-sm dark:shadow-lg transition-all",
                             assignedColor === "rose" 
-                              ? "bg-gradient-to-r from-red-600 to-red-500 border-red-700/50 hover:from-red-700 hover:to-red-600 dark:shadow-red-600/20" 
-                              : "bg-gradient-to-r from-indigo-600 to-blue-500 border-indigo-700/50 hover:from-indigo-700 hover:to-indigo-600 dark:shadow-indigo-600/20"
+                              ? "bg-gradient-to-br from-[#dff8a7] to-[#c4e687] text-slate-950 hover:opacity-95 shadow-md dark:shadow-[#dff8a7]/10" 
+                              : "bg-gradient-to-br from-[#6d40e3] to-[#9061f9] text-white hover:opacity-95 shadow-md dark:shadow-[#6d40e3]/10"
                           )}
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />
@@ -537,7 +544,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
                             </a>
                             <button
                               onClick={() => {
-                                const sender = assignedColor === "indigo" ? "Werner" : assignedColor === "rose" ? "Louis" : "Werner";
+                                const sender = assignedColor === "indigo" ? "Werner" : assignedColor === "rose" ? "Martin" : "Werner";
                                 const note = `Hi there ${firstName},\n\nI work at HuddleCard. We help teams keep birthdays and work anniversaries on autopilot using group greeting cards that everyone signs together (with video, photos, and voice notes). I would love to connect and see if we can help your team stay connected!\n\nGreetings,\n${sender}`;
                                 copyToClipboard(note, `linkedin-note-large-${lead.id}`);
                               }}

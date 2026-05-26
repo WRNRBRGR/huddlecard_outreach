@@ -195,12 +195,12 @@ export default function LeadListPage() {
         <div className="flex flex-col items-end space-y-3">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 dark:shadow-[0_0_5px_rgba(99,102,241,0.5)]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#6d40e3] dark:shadow-[0_0_5px_rgba(109,64,227,0.5)]"></div>
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Werner</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-2 h-2 rounded-full bg-rose-500 dark:shadow-[0_0_5px_rgba(244,63,94,0.5)]"></div>
-              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Louis</span>
+              <div className="w-2 h-2 rounded-full bg-[#dff8a7] border border-[#c4e687]/50 dark:shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Martin</span>
             </div>
           </div>
           <div className="flex items-center space-x-3">
@@ -348,8 +348,8 @@ export default function LeadListPage() {
                   const stage = stageMatch ? stageMatch[1] : "N/A";
                   const displayPitch = pitchData.pitch?.replace(/^\[.*?\]\s*/, "") || "No content";
 
-                  const partnerColor = pitchData.assigned_color === "indigo" ? "bg-indigo-500 dark:shadow-[0_0_8px_rgba(99,102,241,0.6)]" : 
-                                      pitchData.assigned_color === "rose" ? "bg-rose-500 dark:shadow-[0_0_8px_rgba(244,63,94,0.6)]" : 
+                  const partnerColor = pitchData.assigned_color === "indigo" ? "bg-[#6d40e3] dark:shadow-[0_0_8px_rgba(109,64,227,0.6)]" : 
+                                      pitchData.assigned_color === "rose" ? "bg-[#dff8a7] border border-[#c4e687]/50 dark:shadow-[0_0_8px_rgba(223,248,167,0.6)]" : 
                                       "bg-[var(--border)]";
 
                   return (
@@ -373,7 +373,7 @@ export default function LeadListPage() {
                                 <button
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    const sender = pitchData.assigned_color === "indigo" ? "Werner" : pitchData.assigned_color === "rose" ? "Louis" : "Werner";
+                                    const sender = pitchData.assigned_color === "indigo" ? "Werner" : pitchData.assigned_color === "rose" ? "Martin" : "Werner";
                                     const firstName = lead.name.split(' ')[0];
                                     const note = `Hi there ${firstName},\n\nI work at HuddleCard. We help teams keep birthdays and work anniversaries on autopilot using group greeting cards that everyone signs together (with video, photos, and voice notes). I would love to connect and see if we can help your team stay connected!\n\nGreetings,\n${sender}`;
                                     navigator.clipboard.writeText(note);

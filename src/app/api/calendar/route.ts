@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const key = searchParams.get("key");
-  const partner = searchParams.get("partner"); // 'indigo' (Werner) or 'rose' (Louis)
+  const partner = searchParams.get("partner"); // 'indigo' (Werner) or 'rose' (Martin)
 
   // Basic security check
   if (key !== "huddlecard-outreach-secret") {
@@ -61,7 +61,7 @@ export async function GET(request: Request) {
 
   const now = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   
-  const partnerName = partner === 'rose' ? 'Louis' : partner === 'indigo' ? 'Werner' : 'Total';
+  const partnerName = partner === 'rose' ? 'Martin' : partner === 'indigo' ? 'Werner' : 'Total';
 
   let ics = [
     "BEGIN:VCALENDAR",

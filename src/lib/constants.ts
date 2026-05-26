@@ -129,6 +129,6 @@ export const DEFAULT_TEMPLATES = {
   ],
   SIGNATURES: {
     indigo: "\nWerner Burger\nFounder, HuddleCard\n\n+27 73 252 8362\nwww.huddlecard.com\n\n---\nThis email and any attachments are confidential and intended solely for the use of the individual or entity to whom it is addressed. If you have received this email in error, please notify HuddleCard and delete this message from your system.",
-    rose: "\nLouis Minnaar\nHuddleCard\n\n+27 82 575 6333\nwww.huddlecard.com\n\n---\nThis email and any attachments are confidential and intended solely for the use of the individual or entity to whom it is addressed. If you have received this email in error, please notify HuddleCard and delete this message from your system.",
+    rose: "\nMartin\nHuddleCard\n\nwww.huddlecard.com\n\n---\nThis email and any attachments are confidential and intended solely for the use of the individual or entity to whom it is addressed. If you have received this email in error, please notify HuddleCard and delete this message from your system.",
   }
 };

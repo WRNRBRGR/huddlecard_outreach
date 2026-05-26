@@ -248,7 +248,7 @@ export default function EmailCopySettings() {
         <div className="grid md:grid-cols-2 gap-8">
           <div className="glass-panel space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 rounded-full bg-indigo-500 dark:shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+              <div className="w-2 h-2 rounded-full bg-[#6d40e3] dark:shadow-[0_0_8px_rgba(109,64,227,0.5)]" />
               <h4 className="text-sm font-black">Werner's Signature</h4>
             </div>
             <textarea
@@ -260,8 +260,8 @@ export default function EmailCopySettings() {
           </div>
           <div className="glass-panel space-y-4">
             <div className="flex items-center space-x-3">
-              <div className="w-2 h-2 rounded-full bg-rose-500 dark:shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
-              <h4 className="text-sm font-black">Louis's Signature</h4>
+              <div className="w-2 h-2 rounded-full bg-[#dff8a7] border border-[#c4e687]/50 dark:shadow-[0_0_8px_rgba(223,248,167,0.5)]" />
+              <h4 className="text-sm font-black">Martin's Signature</h4>
             </div>
             <textarea
               className="input-field w-full h-32 resize-none text-xs leading-relaxed font-mono"

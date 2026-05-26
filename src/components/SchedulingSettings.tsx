@@ -179,7 +179,7 @@ export function SchedulingSettings({ onClose }: { onClose: () => void }) {
             <div className="p-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_5px_rgba(99,102,241,0.5)]"></div>
+                  <div className="w-2 h-2 rounded-full bg-[#6d40e3] shadow-[0_0_5px_rgba(109,64,227,0.5)]"></div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--foreground)]">Werner</span>
                 </div>
                 <button 
@@ -199,28 +199,28 @@ export function SchedulingSettings({ onClose }: { onClose: () => void }) {
               <p className="text-[9px] text-[var(--muted)]">Syncs leads assigned to Werner (Indigo).</p>
             </div>
 
-            {/* Louis's Feed */}
+            {/* Martin's Feed */}
             <div className="p-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_5px_rgba(244,63,94,0.5)]"></div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--foreground)]">Louis</span>
+                  <div className="w-2 h-2 rounded-full bg-[#dff8a7] shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[var(--foreground)]">Martin</span>
                 </div>
                 <button 
                   onClick={() => {
                     const url = `${window.location.origin}/api/calendar?key=huddlecard-outreach-secret&partner=rose`;
                     navigator.clipboard.writeText(url);
-                    const btn = document.getElementById('copy-louis');
+                    const btn = document.getElementById('copy-martin');
                     if (btn) btn.innerText = 'Copied!';
                     setTimeout(() => { if (btn) btn.innerText = 'Copy URL'; }, 2000);
                   }}
-                  id="copy-louis"
+                  id="copy-martin"
                   className="text-[9px] font-bold uppercase text-[var(--accent)] hover:underline"
                 >
                   Copy URL
                 </button>
               </div>
-              <p className="text-[9px] text-[var(--muted)]">Syncs leads assigned to Louis (Rose).</p>
+              <p className="text-[9px] text-[var(--muted)]">Syncs leads assigned to Martin (Rose).</p>
             </div>
           </div>
         </div>
