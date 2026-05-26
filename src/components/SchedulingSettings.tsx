@@ -203,7 +203,7 @@ export function SchedulingSettings({ onClose }: { onClose: () => void }) {
             <div className="p-3 bg-[var(--surface)] border border-[var(--border)] rounded-xl space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-[#dff8a7] shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+                  <div className="w-2 h-2 rounded-full bg-[#b8e44f] shadow-[0_0_5px_rgba(184,228,79,0.5)]"></div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-[var(--foreground)]">Martin</span>
                 </div>
                 <button 

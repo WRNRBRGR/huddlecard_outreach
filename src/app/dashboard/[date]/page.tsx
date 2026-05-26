@@ -108,8 +108,8 @@ function getPartnerSendWindow(recipientTimezone: string, partnerColor: string | 
 }
 
 const PARTNER_COLORS: Record<string, string> = {
-  indigo: "bg-[#6d40e3] shadow-[0_0_10px_rgba(109,64,227,0.5)]",
-  rose: "bg-[#dff8a7] text-slate-900 border border-[#c4e687]/50 shadow-[0_0_10px_rgba(223,248,167,0.4)]",
+  indigo: "bg-[#6d40e3] text-white",
+  rose: "bg-[#b8e44f] text-slate-900 border border-[#a0cf36]/50",
 };
 
 export default function DailyWorkConsole({ params }: { params: Promise<{ date: string }> }) {
@@ -300,11 +300,11 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
           <div className="flex flex-col items-end space-y-2">
             <div className="flex items-center space-x-4 mb-1">
               <div className="flex items-center space-x-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#6d40e3] shadow-[0_0_5px_rgba(109,64,227,0.5)]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#6d40e3]"></div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Werner</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <div className="w-2 h-2 rounded-full bg-[#dff8a7] border border-[#c4e687]/50 shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+                <div className="w-2 h-2 rounded-full bg-[#b8e44f] border border-[#a0cf36]/50"></div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Martin</span>
               </div>
             </div>
@@ -523,8 +523,8 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
                           className={cn(
                             "btn-primary w-full flex items-center justify-center text-sm dark:shadow-lg transition-all",
                             assignedColor === "rose" 
-                              ? "bg-gradient-to-br from-[#dff8a7] to-[#c4e687] text-slate-950 hover:opacity-95 shadow-md dark:shadow-[#dff8a7]/10" 
-                              : "bg-gradient-to-br from-[#6d40e3] to-[#9061f9] text-white hover:opacity-95 shadow-md dark:shadow-[#6d40e3]/10"
+                              ? "bg-gradient-to-br from-[#b8e44f] to-[#a0cf36] text-slate-950 hover:opacity-95" 
+                              : "bg-gradient-to-br from-[#6d40e3] to-[#9061f9] text-white hover:opacity-95"
                           )}
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />

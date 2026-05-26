@@ -199,7 +199,7 @@ export default function LeadListPage() {
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Werner</span>
             </div>
             <div className="flex items-center space-x-1.5">
-              <div className="w-2 h-2 rounded-full bg-[#dff8a7] border border-[#c4e687]/50 dark:shadow-[0_0_5px_rgba(223,248,167,0.5)]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#b8e44f] border border-[#a0cf36]/50 dark:shadow-[0_0_5px_rgba(184,228,79,0.5)]"></div>
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Martin</span>
             </div>
           </div>
@@ -349,7 +349,7 @@ export default function LeadListPage() {
                   const displayPitch = pitchData.pitch?.replace(/^\[.*?\]\s*/, "") || "No content";
 
                   const partnerColor = pitchData.assigned_color === "indigo" ? "bg-[#6d40e3] dark:shadow-[0_0_8px_rgba(109,64,227,0.6)]" : 
-                                      pitchData.assigned_color === "rose" ? "bg-[#dff8a7] border border-[#c4e687]/50 dark:shadow-[0_0_8px_rgba(223,248,167,0.6)]" : 
+                                      pitchData.assigned_color === "rose" ? "bg-[#b8e44f] border border-[#a0cf36]/50 dark:shadow-[0_0_8px_rgba(184,228,79,0.6)]" : 
                                       "bg-[var(--border)]";
 
                   return (

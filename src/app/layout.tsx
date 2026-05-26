@@ -12,6 +12,7 @@ const archivoBlack = Archivo_Black({
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"], 
+  weight: ["500", "600", "700", "800"],
   variable: "--font-plus-jakarta-sans" 
 });
 
