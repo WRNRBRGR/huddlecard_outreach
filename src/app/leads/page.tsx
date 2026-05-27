@@ -16,10 +16,10 @@ function getStage(pitch: string | null): string {
   try {
     const data = JSON.parse(pitch);
     if (data.stage) return data.stage;
-    const match = data.pitch?.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+    const match = data.pitch?.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
     return match ? match[1] : "INTRO";
   } catch {
-    const match = pitch.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+    const match = pitch.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
     return match ? match[1] : "INTRO";
   }
 }
@@ -99,7 +99,7 @@ export default function LeadListPage() {
       });
 
       const updates: { id: string, scheduled_date: string }[] = [];
-      const stageOrder = ["INTRO", "SHOWREELS", "CURTAIN_CALL"];
+      const stageOrder = ["INTRO", "FEATURES", "CURTAIN_CALL"];
 
       // 4. Reschedule each group
       Object.values(groups).forEach(personLeads => {
@@ -344,7 +344,7 @@ export default function LeadListPage() {
                     }
                   } catch (e) {}
 
-                  const stageMatch = pitchData.pitch?.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+                  const stageMatch = pitchData.pitch?.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
                   const stage = stageMatch ? stageMatch[1] : "N/A";
                   const displayPitch = pitchData.pitch?.replace(/^\[.*?\]\s*/, "") || "No content";
 
@@ -423,7 +423,7 @@ export default function LeadListPage() {
                         {(() => {
                           const colors: Record<string, string> = {
                             INTRO: "from-blue-600/20 to-cyan-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30",
-                            SHOWREELS: "from-purple-600/20 to-pink-500/10 text-purple-700 dark:text-purple-400 border-purple-500/30",
+                            FEATURES: "from-purple-600/20 to-pink-500/10 text-purple-700 dark:text-purple-400 border-purple-500/30",
                             CURTAIN_CALL: "from-amber-600/20 to-orange-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30",
                           };
                           return (

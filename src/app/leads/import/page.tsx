@@ -91,7 +91,7 @@ export default function LeadImportPage() {
       setProgress({ current: 0, total: uniqueLeads.length });
 
       // 1. Load all template variations and subjects
-      const loadStage = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL") => {
+      const loadStage = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL") => {
         const templateArray = DEFAULT_TEMPLATES[stage];
         return TEMPLATE_KEYS[stage].map((keys, idx) => ({
           subject: localStorage.getItem(keys.subject) || templateArray[idx].subject,
@@ -101,7 +101,7 @@ export default function LeadImportPage() {
 
       const allTemplates = {
         INTRO: loadStage("INTRO"),
-        SHOWREELS: loadStage("SHOWREELS"),
+        FEATURES: loadStage("FEATURES"),
         CURTAIN_CALL: loadStage("CURTAIN_CALL"),
       };
 
@@ -151,7 +151,7 @@ export default function LeadImportPage() {
 
             const stages = [
               { type: "INTRO", date: d1, template: allTemplates.INTRO[vIdx] },
-              { type: "SHOWREELS", date: d2, template: allTemplates.SHOWREELS[vIdx] },
+              { type: "FEATURES", date: d2, template: allTemplates.FEATURES[vIdx] },
               { type: "CURTAIN_CALL", date: d3, template: allTemplates.CURTAIN_CALL[vIdx] },
             ];
 

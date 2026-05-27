@@ -13,7 +13,7 @@ export default function EmailCopySettings() {
       { subject: "", body: "" },
       { subject: "", body: "" },
     ],
-    SHOWREELS: [
+    FEATURES: [
       { subject: "", body: "" },
       { subject: "", body: "" },
       { subject: "", body: "" },
@@ -32,7 +32,7 @@ export default function EmailCopySettings() {
   
   const [activeTabs, setActiveTabs] = useState({
     INTRO: 0,
-    SHOWREELS: 0,
+    FEATURES: 0,
     CURTAIN_CALL: 0,
   });
 
@@ -45,7 +45,7 @@ export default function EmailCopySettings() {
   const gap = config.daysBetween;
 
   useEffect(() => {
-    const loadStage = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL") => {
+    const loadStage = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL") => {
       const templateArray = DEFAULT_TEMPLATES[stage];
       return TEMPLATE_KEYS[stage].map((keys, idx) => ({
         subject: localStorage.getItem(keys.subject) || templateArray[idx].subject,
@@ -55,7 +55,7 @@ export default function EmailCopySettings() {
 
     setTemplates({
       INTRO: loadStage("INTRO"),
-      SHOWREELS: loadStage("SHOWREELS"),
+      FEATURES: loadStage("FEATURES"),
       CURTAIN_CALL: loadStage("CURTAIN_CALL"),
     });
 
@@ -77,7 +77,7 @@ export default function EmailCopySettings() {
     setSaving(true);
     setSaved(false);
 
-    const saveStage = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL") => {
+    const saveStage = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL") => {
       templates[stage].forEach((v, idx) => {
         localStorage.setItem(TEMPLATE_KEYS[stage][idx].subject, v.subject);
         localStorage.setItem(TEMPLATE_KEYS[stage][idx].body, v.body);
@@ -85,7 +85,7 @@ export default function EmailCopySettings() {
     };
 
     saveStage("INTRO");
-    saveStage("SHOWREELS");
+    saveStage("FEATURES");
     saveStage("CURTAIN_CALL");
 
     localStorage.setItem(TEMPLATE_KEYS.SIGNATURES.indigo, signatures.indigo);
@@ -103,11 +103,11 @@ export default function EmailCopySettings() {
     if (confirm("Reset all templates and variations to their default values?")) {
       setTemplates({
         INTRO: DEFAULT_TEMPLATES.INTRO,
-        SHOWREELS: DEFAULT_TEMPLATES.SHOWREELS,
+        FEATURES: DEFAULT_TEMPLATES.FEATURES,
         CURTAIN_CALL: DEFAULT_TEMPLATES.CURTAIN_CALL,
       });
       
-      const clearStage = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL") => {
+      const clearStage = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL") => {
         TEMPLATE_KEYS[stage].forEach(keys => {
           localStorage.removeItem(keys.subject);
           localStorage.removeItem(keys.body);
@@ -115,7 +115,7 @@ export default function EmailCopySettings() {
       };
 
       clearStage("INTRO");
-      clearStage("SHOWREELS");
+      clearStage("FEATURES");
       clearStage("CURTAIN_CALL");
       
       localStorage.removeItem(TEMPLATE_KEYS.SIGNATURES.indigo);
@@ -144,7 +144,7 @@ export default function EmailCopySettings() {
     });
   };
 
-  const renderStage = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL", label: string, step: string, dayText: string) => {
+  const renderStage = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL", label: string, step: string, dayText: string) => {
     const activeIdx = activeTabs[stage];
     const current = templates[stage][activeIdx];
 
@@ -235,13 +235,16 @@ export default function EmailCopySettings() {
               <Sparkles className="h-3 w-3 text-[var(--accent)]" />
               <span className="text-[10px] font-black uppercase tracking-widest text-[var(--muted)]">Variables:</span>
            </div>
-           <code className="text-[10px] bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--accent)]">{"{name}"}</code>
+           <div className="flex items-center space-x-1.5">
+             <code className="text-[10px] bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--accent)]">{"{name}"}</code>
+             <code className="text-[10px] bg-[var(--background)] px-2 py-0.5 rounded border border-[var(--border)] text-[var(--accent)]">{"{company}"}</code>
+           </div>
         </div>
       </div>
 
       <div className="grid gap-8">
         {renderStage("INTRO", "Introduction", "01. First Contact", "Day 1")}
-        {renderStage("SHOWREELS", "Showreels & Work", "02. Proof of Value", `Day ${1 + gap} (+${gap})`)}
+        {renderStage("FEATURES", "HuddleCard Features", "02. Proof of Value", `Day ${1 + gap} (+${gap})`)}
         {renderStage("CURTAIN_CALL", "Curtain Call", "03. Final Check-in", `Day ${1 + gap * 2} (+${gap})`)}
         
         {/* Signatures */}

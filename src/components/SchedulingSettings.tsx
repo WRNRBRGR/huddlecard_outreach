@@ -220,7 +220,7 @@ export function SchedulingSettings({ onClose }: { onClose: () => void }) {
                   Copy URL
                 </button>
               </div>
-              <p className="text-[9px] text-[var(--muted)]">Syncs leads assigned to Martin (Rose).</p>
+              <p className="text-[9px] text-[var(--muted)]">Syncs leads assigned to Martin (Lime).</p>
             </div>
           </div>
         </div>

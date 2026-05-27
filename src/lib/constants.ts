@@ -68,10 +68,10 @@ export const TEMPLATE_KEYS = {
     { subject: "email_template_intro_v2_subject", body: "email_template_intro_v2_body" },
     { subject: "email_template_intro_v3_subject", body: "email_template_intro_v3_body" },
   ],
-  SHOWREELS: [
-    { subject: "email_template_showreels_v1_subject", body: "email_template_showreels_v1_body" },
-    { subject: "email_template_showreels_v2_subject", body: "email_template_showreels_v2_body" },
-    { subject: "email_template_showreels_v3_subject", body: "email_template_showreels_v3_body" },
+  FEATURES: [
+    { subject: "email_template_features_v1_subject", body: "email_template_features_v1_body" },
+    { subject: "email_template_features_v2_subject", body: "email_template_features_v2_body" },
+    { subject: "email_template_features_v3_subject", body: "email_template_features_v3_body" },
   ],
   CURTAIN_CALL: [
     { subject: "email_template_curtain_call_v1_subject", body: "email_template_curtain_call_v1_body" },
@@ -99,18 +99,18 @@ export const DEFAULT_TEMPLATES = {
       body: "I'm reaching out from HuddleCard. We help remote and hybrid teams celebrate birthdays, anniversaries, and milestones with personal group cards. Thought we'd be a good fit for your team!" 
     },
   ],
-  SHOWREELS: [
+  FEATURES: [
     { 
-      subject: "HuddleCard — A look at how it works", 
-      body: "I thought you might appreciate a quick look at how HuddleCard works and how easily your team can collaborate on group cards." 
+      subject: "HuddleCard — Automated celebrations with rich media", 
+      body: "Wanted to share a few reasons teams love HuddleCard. We completely automate milestone celebrations like birthdays and work anniversaries so no one is ever forgotten. Your team can sign beautiful cards and add rich media like videos, photos, and voice notes. Plus, we're built with rock-solid security — we never collect or sell personal info from individuals or teams." 
     },
     { 
-      subject: "Interactive group cards for your team", 
-      body: "Wanted to share a quick preview of what modern team celebrations look like with HuddleCard. You can add video, voice notes, and threads directly." 
+      subject: "Automatic milestones, rich media, and total privacy / HuddleCard", 
+      body: "HuddleCard is built for modern teams who want to celebrate birthdays and work anniversaries on complete autopilot. Collaborators can easily customize cards with personalized video and sound recordings to make them truly special. Best of all, we take a privacy-first approach: our security is rock-solid, and we never collect or harvest personal data from your employees or organization." 
     },
     { 
-      subject: "Putting team birthdays on autopilot", 
-      body: "Here is a quick look at how you can automate team birthdays and work anniversaries so nobody ever gets forgotten." 
+      subject: "How HuddleCard keeps team celebrations secure & interactive", 
+      body: "We built HuddleCard to combine high-engagement interactive cards (including rich media like video, audio, and photos) with automatic scheduling for team anniversaries and birthdays. Importantly, we guarantee enterprise-grade security: we never track, collect, or store personal information about your team members. It's a completely safe, fun way to boost connection." 
     },
   ],
   CURTAIN_CALL: [

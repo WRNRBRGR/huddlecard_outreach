@@ -20,19 +20,19 @@ type Lead = Database["public"]["Tables"]["leads"]["Row"];
 
 const EMAIL_SUBJECTS: Record<string, string> = {
   INTRO: "Introducing HuddleCard — Group greeting cards on autopilot",
-  SHOWREELS: "HuddleCard — A look at how it works",
+  FEATURES: "HuddleCard — Automated celebrations & media-rich cards",
   CURTAIN_CALL: "One last thought from HuddleCard",
 };
 
 const STAGE_COLORS: Record<string, string> = {
   INTRO: "from-blue-600/30 to-cyan-500/20 text-blue-700 dark:text-blue-300 border-blue-500/40",
-  SHOWREELS: "from-purple-600/30 to-pink-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40",
+  FEATURES: "from-purple-600/30 to-pink-500/20 text-purple-700 dark:text-purple-300 border-purple-500/40",
   CURTAIN_CALL: "from-amber-600/30 to-orange-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40",
 };
 
 const STAGE_LABELS: Record<string, string> = {
   INTRO: "Intro",
-  SHOWREELS: "Showreels",
+  FEATURES: "Features",
   CURTAIN_CALL: "Curtain Call",
 };
 
@@ -43,7 +43,7 @@ interface ToastMessage {
 }
 
 interface ParsedPitch {
-  stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL";
+  stage: "INTRO" | "FEATURES" | "CURTAIN_CALL";
   subject: string | null;
   body: string | null;
   linkedin: string | null;
@@ -63,7 +63,7 @@ function parsePitch(raw: string | null): ParsedPitch {
       let subject = parsed.subject || null;
       
       if (parsed.pitch) {
-        const stageMatch = parsed.pitch.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+        const stageMatch = parsed.pitch.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
         stage = (stageMatch ? stageMatch[1] : "INTRO") as ParsedPitch["stage"];
         body = body || parsed.pitch.replace(/^\[.*?\]\s*/, "");
       }
@@ -78,7 +78,7 @@ function parsePitch(raw: string | null): ParsedPitch {
     }
   } catch {}
 
-  const stageMatch = raw.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+  const stageMatch = raw.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
   return { ...defaults, stage: (stageMatch ? stageMatch[1] : "INTRO") as ParsedPitch["stage"] };
 }
 
@@ -118,7 +118,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const [templates, setTemplates] = useState({ INTRO: "", SHOWREELS: "", CURTAIN_CALL: "" });
+  const [templates, setTemplates] = useState({ INTRO: "", FEATURES: "", CURTAIN_CALL: "" });
   const [signatures, setSignatures] = useState({ indigo: "", rose: "" });
   const [recomposing, setRecomposing] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -130,14 +130,14 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
   }
 
   function loadTemplates() {
-    const loadDefault = (stage: "INTRO" | "SHOWREELS" | "CURTAIN_CALL") => {
+    const loadDefault = (stage: "INTRO" | "FEATURES" | "CURTAIN_CALL") => {
       // For fallback, just use the first variation
       return localStorage.getItem(TEMPLATE_KEYS[stage][0].body) || DEFAULT_TEMPLATES[stage][0].body;
     };
 
     setTemplates({
       INTRO: loadDefault("INTRO"),
-      SHOWREELS: loadDefault("SHOWREELS"),
+      FEATURES: loadDefault("FEATURES"),
       CURTAIN_CALL: loadDefault("CURTAIN_CALL"),
     });
 
@@ -339,7 +339,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
             const sendWindow = getPartnerSendWindow(lead.timezone, assignedColor);
 
             // Prioritize: 1. Saved variation data, 2. Global template fallback
-            const stageKey = stage as "INTRO" | "SHOWREELS" | "CURTAIN_CALL";
+            const stageKey = stage as "INTRO" | "FEATURES" | "CURTAIN_CALL";
             const emailSubject = savedSubject || DEFAULT_TEMPLATES[stageKey][0].subject || "";
             const emailBody = savedBody || (templates[stageKey] as any) || DEFAULT_TEMPLATES[stageKey][0].body || "";
             const signature = signatures[assignedColor as keyof typeof signatures] || "";

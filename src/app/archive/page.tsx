@@ -66,11 +66,11 @@ export default function LeadArchivePage() {
               const data = JSON.parse(lastLead.ai_pitch);
               lastStage = data.stage || "INTRO";
             } else {
-              const match = lastLead.ai_pitch.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+              const match = lastLead.ai_pitch.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
               lastStage = match ? match[1] : "INTRO";
             }
           } catch (e) {
-            const match = lastLead.ai_pitch.match(/^\[(INTRO|SHOWREELS|CURTAIN_CALL)\]/);
+            const match = lastLead.ai_pitch.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
             lastStage = match ? match[1] : "INTRO";
           }
         }
