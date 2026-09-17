@@ -42,7 +42,7 @@ export async function GET(request: Request) {
   // Group by date and count unsent
   const counts: Record<string, { total: number; sent: number }> = {};
   
-  data?.forEach((lead) => {
+  (data as Array<{ scheduled_date: string; sent_at: string | null; ai_pitch: string | null }> | null)?.forEach((lead) => {
     const leadPartner = getPartnerColor(lead.ai_pitch);
     
     // Filter by partner if specified
