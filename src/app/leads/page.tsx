@@ -4,25 +4,11 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
 import { format, parseISO } from "date-fns";
-import { ScheduleTracker, useSchedulingConfig } from "@/lib/scheduling";
+import { useSchedulingConfig, rebalanceOutreachSchedule, getStage } from "@/lib/scheduling";
 import { RefreshCw, Loader2, Search, Trash2, Mail, MapPin, Calendar, Clock, AlertTriangle, Copy, Check } from "lucide-react";
 import { cn, getLinkedInUrl } from "@/lib/utils";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
-
-// Helper to parse stage from ai_pitch
-function getStage(pitch: string | null): string {
-  if (!pitch) return "INTRO";
-  try {
-    const data = JSON.parse(pitch);
-    if (data.stage) return data.stage;
-    const match = data.pitch?.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
-    return match ? match[1] : "INTRO";
-  } catch {
-    const match = pitch.match(/^\[(INTRO|FEATURES|CURTAIN_CALL)\]/);
-    return match ? match[1] : "INTRO";
-  }
-}
 
 export default function LeadListPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -68,85 +54,18 @@ export default function LeadListPage() {
     setConfirmOptimize(false);
     setOptimizing(true);
     try {
-      // 1. Get all leads
-      const { data: allLeads, error: fetchError } = await supabase.from("leads").select("*");
-      if (fetchError) throw fetchError;
-
-      // 2. Setup Tracker and identify today
-      const today = new Date();
-      // If it's past 3 PM, start scheduling from tomorrow to be safe
-      if (today.getHours() >= 15) {
-        today.setDate(today.getDate() + 1);
-      }
-      today.setHours(0,0,0,0);
-      const todayStr = format(today, "yyyy-MM-dd");
-
-      const tracker = new ScheduleTracker(config);
-      tracker.setStartDate(today);
-      
-      // Populate tracker with sent leads (slots that are already "gone")
-      allLeads.filter(l => l.sent_at).forEach(l => {
-        if (l.scheduled_date >= todayStr) {
-          tracker.addCount(l.scheduled_date);
-        }
-      });
-
-      // 3. Group ALL leads by person (email) to maintain sequence history
-      const groups: Record<string, Lead[]> = {};
-      allLeads.forEach(l => {
-        if (!groups[l.email]) groups[l.email] = [];
-        groups[l.email].push(l);
-      });
-
-      const updates: { id: string, scheduled_date: string }[] = [];
-      const stageOrder = ["INTRO", "FEATURES", "CURTAIN_CALL"];
-
-      // 4. Reschedule each group
-      Object.values(groups).forEach(personLeads => {
-        // Sort by stage order to maintain sequence integrity
-        personLeads.sort((a, b) => stageOrder.indexOf(getStage(a.ai_pitch)) - stageOrder.indexOf(getStage(b.ai_pitch)));
-        
-        let lastDate: Date | null = null;
-        
-        personLeads.forEach((l) => {
-          if (l.sent_at) {
-            // Already sent, use this as the anchor for the next one
-            lastDate = new Date(l.scheduled_date);
-          } else {
-            // Unsent, reschedule it starting from today (or last sent date + gap)
-            const anchor = lastDate || today;
-            const minGap = lastDate ? config.daysBetween : 0;
-            
-            // Ensure we never schedule in the past
-            const searchStart = anchor < today ? today : anchor;
-            
-            const newDate = tracker.getNextAvailableDate(searchStart, minGap);
-            const newDateStr = format(newDate, "yyyy-MM-dd");
-
-            // Only add to updates if the date actually changed
-            if (l.scheduled_date !== newDateStr) {
-              updates.push({ id: l.id, scheduled_date: newDateStr });
-            }
-            lastDate = newDate;
-          }
-        });
-      });
-
-      // 5. Batch update
-      if (updates.length > 0) {
-        // Perform updates in smaller chunks if needed, but for 100-200 leads a single call is fine
-        // We use a loop for now to be safe with RLS and specific column updates
-        const updatePromises = updates.map(u => 
-          supabase.from("leads").update({ scheduled_date: u.scheduled_date }).eq("id", u.id)
+      const res = await rebalanceOutreachSchedule(supabase, config);
+      if (res.success) {
+        showStatus(
+          "success",
+          res.updated > 0
+            ? `Optimized ${res.updated} scheduled email${res.updated > 1 ? "s" : ""} across your active days.`
+            : "Pipeline is already balanced and up to date."
         );
-        
-        const results = await Promise.all(updatePromises);
-        const error = results.find(r => r.error)?.error;
-        if (error) throw error;
+        fetchLeads();
+      } else {
+        showStatus("error", res.error || "Failed to optimize schedule.");
       }
-
-      showStatus("success", `Optimized ${updates.length} scheduled emails.`);
-      fetchLeads();
     } catch (error: any) {
       console.error("Rebalance failed:", error);
       showStatus("error", "Failed to optimize schedule.");

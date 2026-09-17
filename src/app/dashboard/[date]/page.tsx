@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
 import { format, parseISO } from "date-fns";
@@ -8,12 +9,13 @@ import {
   ChevronLeft, Clock, Send, Sparkles,
   CheckCircle2, Loader2,
   Mail, AlertCircle, RotateCcw, MapPin,
-  Copy, ExternalLink
+  Copy, ExternalLink, RefreshCw
 } from "lucide-react";
 import Link from "next/link";
 import { cn, replaceVariables, getGmailLink, getLinkedInUrl } from "@/lib/utils";
 import { TIMEZONE_LABELS, TEMPLATE_KEYS, DEFAULT_TEMPLATES } from "@/lib/constants";
 import { recomposeEmail } from "@/app/actions/ai";
+import { rebalanceOutreachSchedule, useSchedulingConfig } from "@/lib/scheduling";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 
@@ -114,6 +116,10 @@ const PARTNER_COLORS: Record<string, string> = {
 
 export default function DailyWorkConsole({ params }: { params: Promise<{ date: string }> }) {
   const { date } = use(params);
+  const router = useRouter();
+  const config = useSchedulingConfig();
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -122,6 +128,24 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
   const [signatures, setSignatures] = useState({ indigo: "", rose: "" });
   const [recomposing, setRecomposing] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [rollingOver, setRollingOver] = useState(false);
+
+  async function handleRolloverToToday() {
+    setRollingOver(true);
+    try {
+      const res = await rebalanceOutreachSchedule(supabase, config);
+      if (res.success) {
+        addToast("success", `Rolled over ${res.overdueCount} overdue email${res.overdueCount > 1 ? "s" : ""} to today.`);
+        router.push(`/dashboard/${todayStr}`);
+      } else {
+        addToast("error", "Failed to roll over schedule.");
+      }
+    } catch {
+      addToast("error", "Failed to roll over schedule.");
+    } finally {
+      setRollingOver(false);
+    }
+  }
 
   function copyToClipboard(text: string, id: string) {
     navigator.clipboard.writeText(text);
@@ -320,6 +344,31 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
           </div>
         )}
       </div>
+
+      {/* Overdue Banner if viewing a past date with unsent leads */}
+      {date < todayStr && (leads.length - sentCount) > 0 && (
+        <div className="p-4 rounded-xl border border-amber-500/40 bg-amber-950/20 text-amber-200 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-5 w-5 text-amber-400 shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-amber-200">
+                {leads.length - sentCount} missed email{leads.length - sentCount > 1 ? "s" : ""} on this date were not sent.
+              </p>
+              <p className="text-xs text-amber-300/70">
+                You can roll them over into today's queue so they get sent without losing sequence pacing.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleRolloverToToday}
+            disabled={rollingOver}
+            className="btn-primary flex items-center space-x-2 py-2 px-5 text-xs font-bold uppercase tracking-wider shrink-0"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", rollingOver && "animate-spin")} />
+            <span>{rollingOver ? "Rolling Over..." : "Roll Over to Today"}</span>
+          </button>
+        </div>
+      )}
 
       <div className="space-y-6">
         {leads.length === 0 ? (
