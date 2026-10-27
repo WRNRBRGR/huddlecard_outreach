@@ -271,19 +271,18 @@ export default function LeadListPage() {
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Scheduled Date</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Outreach Stage</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Status</th>
-                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center">
+                  <td colSpan={5} className="px-6 py-12 text-center">
                     <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)] mx-auto" />
                   </td>
                 </tr>
               ) : filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-[var(--muted)]">
+                  <td colSpan={5} className="px-6 py-12 text-center text-[var(--muted)]">
                     <div className="flex flex-col items-center space-y-2">
                       <AlertTriangle className="h-5 w-5 opacity-20" />
                       <p className="text-sm">No scheduled leads found.</p>
@@ -354,6 +353,51 @@ export default function LeadListPage() {
                             <Mail className="h-2.5 w-2.5" />
                             <span>{lead.email}</span>
                           </div>
+                          <div className="mt-2.5 min-h-[20px] flex items-center">
+                            {busyId === lead.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--muted)]" />
+                            ) : confirmCancel?.id === lead.id ? (
+                              <div className="flex items-center space-x-2">
+                                <span className="text-[10px] font-bold text-red-400 whitespace-nowrap">
+                                  {confirmCancel.scope === "email" ? "Skip this email?" : "Remove lead & all pending emails?"}
+                                </span>
+                                <button
+                                  onClick={() => setConfirmCancel(null)}
+                                  className="px-2 py-0.5 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-md transition-all"
+                                >Cancel</button>
+                                <button
+                                  onClick={() => cancelEmails(lead, confirmCancel.scope)}
+                                  className="px-2 py-0.5 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-md transition-all"
+                                >{confirmCancel.scope === "email" ? "Yes, Skip" : "Yes, Remove"}</button>
+                              </div>
+                            ) : lead.cancelled_at ? (
+                              <button
+                                onClick={() => restoreEmail(lead)}
+                                className="flex items-center space-x-1.5 text-[10px] text-[var(--muted)] hover:text-[var(--accent)] transition-colors"
+                                title="Put this email back in the schedule"
+                              >
+                                <RotateCcw className="h-3 w-3" />
+                                <span>Restore Email</span>
+                              </button>
+                            ) : !lead.sent_at ? (
+                              <div className="flex items-center space-x-4">
+                                <button
+                                  onClick={() => setConfirmCancel({ id: lead.id, scope: "email" })}
+                                  className="flex items-center space-x-1.5 text-[10px] text-[var(--muted)] hover:text-red-400 transition-colors"
+                                >
+                                  <Ban className="h-3 w-3" />
+                                  <span>Skip Email</span>
+                                </button>
+                                <button
+                                  onClick={() => setConfirmCancel({ id: lead.id, scope: "lead" })}
+                                  className="flex items-center space-x-1.5 text-[10px] text-[var(--muted)] hover:text-red-400 transition-colors"
+                                >
+                                  <UserX className="h-3 w-3" />
+                                  <span>Remove Lead</span>
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -411,51 +455,6 @@ export default function LeadListPage() {
                             Pending
                           </div>
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {busyId === lead.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--muted)] ml-auto" />
-                        ) : confirmCancel?.id === lead.id ? (
-                          <div className="flex items-center justify-end space-x-2">
-                            <span className="text-[10px] font-bold text-red-400 whitespace-nowrap">
-                              {confirmCancel.scope === "email" ? "Skip this email?" : "Remove lead?"}
-                            </span>
-                            <button
-                              onClick={() => setConfirmCancel(null)}
-                              className="px-2 py-1 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-md transition-all"
-                            >No</button>
-                            <button
-                              onClick={() => cancelEmails(lead, confirmCancel.scope)}
-                              className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-md transition-all"
-                            >Yes</button>
-                          </div>
-                        ) : lead.cancelled_at ? (
-                          <button
-                            onClick={() => restoreEmail(lead)}
-                            className="inline-flex items-center space-x-1.5 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--accent)] transition-colors"
-                            title="Put this email back in the schedule"
-                          >
-                            <RotateCcw className="h-3 w-3" />
-                            <span>Restore</span>
-                          </button>
-                        ) : !lead.sent_at ? (
-                          <div className="flex items-center justify-end space-x-3">
-                            <button
-                              onClick={() => setConfirmCancel({ id: lead.id, scope: "email" })}
-                              className="text-[var(--muted)] hover:text-red-400 transition-colors"
-                              title="Skip this email"
-                            >
-                              <Ban className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              onClick={() => setConfirmCancel({ id: lead.id, scope: "lead" })}
-                              className="text-[var(--muted)] hover:text-red-400 transition-colors"
-                              title="Remove lead (cancel all pending emails)"
-                            >
-                              <UserX className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ) : null}
                       </td>
                     </tr>
                   );
