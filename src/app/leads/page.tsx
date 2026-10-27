@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import { Database } from "@/types/database";
 import { format, parseISO } from "date-fns";
-import { useSchedulingConfig, rebalanceOutreachSchedule, getStage } from "@/lib/scheduling";
-import { RefreshCw, Loader2, Search, Trash2, Mail, MapPin, Calendar, Clock, AlertTriangle, Copy, Check } from "lucide-react";
+import { useSchedulingConfig, rebalanceOutreachSchedule, getStage, cancelPendingEmail, cancelLeadSequence, restoreCancelledEmail } from "@/lib/scheduling";
+import { RefreshCw, Loader2, Search, Trash2, Mail, MapPin, Calendar, Clock, AlertTriangle, Copy, Check, Ban, UserX, RotateCcw } from "lucide-react";
 import { cn, getLinkedInUrl } from "@/lib/utils";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
@@ -16,11 +16,13 @@ export default function LeadListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [clearing, setClearing] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
-  const [filter, setFilter] = useState<"all" | "pending" | "sent">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "sent" | "cancelled">("all");
   const [status, setStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [confirmOptimize, setConfirmOptimize] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState<{ id: string; scope: "email" | "lead" } | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
   const statusTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const config = useSchedulingConfig();
 
@@ -90,7 +92,44 @@ export default function LeadListPage() {
     }
   }
 
-  const pendingCount = leads.filter(l => !l.sent_at).length;
+  async function cancelEmails(lead: Lead, scope: "email" | "lead") {
+    setConfirmCancel(null);
+    setBusyId(lead.id);
+    try {
+      const { error } = scope === "email"
+        ? await cancelPendingEmail(supabase, lead.id)
+        : await cancelLeadSequence(supabase, lead.email);
+      if (error) throw error;
+      await rebalanceOutreachSchedule(supabase, config);
+      showStatus("success", scope === "email"
+        ? `Skipped one email to ${lead.name}.`
+        : `Removed ${lead.name} — all pending emails cancelled.`);
+      fetchLeads();
+    } catch (error: any) {
+      console.error("Cancel failed:", error);
+      showStatus("error", error.message || "Failed to cancel.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function restoreEmail(lead: Lead) {
+    setBusyId(lead.id);
+    try {
+      const { error } = await restoreCancelledEmail(supabase, lead.id);
+      if (error) throw error;
+      await rebalanceOutreachSchedule(supabase, config);
+      showStatus("success", `Restored email to ${lead.name} and re-paced the schedule.`);
+      fetchLeads();
+    } catch (error: any) {
+      console.error("Restore failed:", error);
+      showStatus("error", error.message || "Failed to restore.");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const pendingCount = leads.filter(l => !l.sent_at && !l.cancelled_at).length;
 
   const filteredLeads = leads.filter(l => {
     const matchesSearch =
@@ -99,7 +138,8 @@ export default function LeadListPage() {
       l.agency?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter =
       filter === "all" ? true :
-      filter === "pending" ? !l.sent_at :
+      filter === "pending" ? !l.sent_at && !l.cancelled_at :
+      filter === "cancelled" ? !!l.cancelled_at :
       !!l.sent_at;
     return matchesSearch && matchesFilter;
   });
@@ -125,7 +165,7 @@ export default function LeadListPage() {
           <div className="flex items-center space-x-3">
             {/* Filter Tabs */}
             <div className="flex items-center bg-[var(--surface)] border border-[var(--border)] rounded-lg p-0.5 text-[10px] font-black uppercase tracking-widest">
-              {(["all", "pending", "sent"] as const).map(f => (
+              {(["all", "pending", "sent", "cancelled"] as const).map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
@@ -230,18 +270,20 @@ export default function LeadListPage() {
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Region & Time</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Scheduled Date</th>
                 <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Outreach Stage</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)]">Status</th>
+                <th className="px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-[var(--muted)] text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)]">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center">
+                  <td colSpan={6} className="px-6 py-12 text-center">
                     <Loader2 className="h-6 w-6 animate-spin text-[var(--accent)] mx-auto" />
                   </td>
                 </tr>
               ) : filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-[var(--muted)]">
+                  <td colSpan={6} className="px-6 py-12 text-center text-[var(--muted)]">
                     <div className="flex flex-col items-center space-y-2">
                       <AlertTriangle className="h-5 w-5 opacity-20" />
                       <p className="text-sm">No scheduled leads found.</p>
@@ -360,11 +402,60 @@ export default function LeadListPage() {
                           <div className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
                             Sent
                           </div>
+                        ) : lead.cancelled_at ? (
+                          <div className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-red-500/10 text-red-500 border border-red-500/20">
+                            Cancelled
+                          </div>
                         ) : (
                           <div className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest bg-[var(--surface)] text-[var(--muted)] border border-[var(--border)]">
                             Pending
                           </div>
                         )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {busyId === lead.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--muted)] ml-auto" />
+                        ) : confirmCancel?.id === lead.id ? (
+                          <div className="flex items-center justify-end space-x-2">
+                            <span className="text-[10px] font-bold text-red-400 whitespace-nowrap">
+                              {confirmCancel.scope === "email" ? "Skip this email?" : "Remove lead?"}
+                            </span>
+                            <button
+                              onClick={() => setConfirmCancel(null)}
+                              className="px-2 py-1 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-md transition-all"
+                            >No</button>
+                            <button
+                              onClick={() => cancelEmails(lead, confirmCancel.scope)}
+                              className="px-2 py-1 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-md transition-all"
+                            >Yes</button>
+                          </div>
+                        ) : lead.cancelled_at ? (
+                          <button
+                            onClick={() => restoreEmail(lead)}
+                            className="inline-flex items-center space-x-1.5 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--accent)] transition-colors"
+                            title="Put this email back in the schedule"
+                          >
+                            <RotateCcw className="h-3 w-3" />
+                            <span>Restore</span>
+                          </button>
+                        ) : !lead.sent_at ? (
+                          <div className="flex items-center justify-end space-x-3">
+                            <button
+                              onClick={() => setConfirmCancel({ id: lead.id, scope: "email" })}
+                              className="text-[var(--muted)] hover:text-red-400 transition-colors"
+                              title="Skip this email"
+                            >
+                              <Ban className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setConfirmCancel({ id: lead.id, scope: "lead" })}
+                              className="text-[var(--muted)] hover:text-red-400 transition-colors"
+                              title="Remove lead (cancel all pending emails)"
+                            >
+                              <UserX className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : null}
                       </td>
                     </tr>
                   );

@@ -150,7 +150,8 @@ export async function checkOverdueLeads(supabase: any): Promise<number> {
     .from("leads")
     .select("*", { count: "exact", head: true })
     .lt("scheduled_date", todayStr)
-    .is("sent_at", null);
+    .is("sent_at", null)
+    .is("cancelled_at", null);
 
   if (error) {
     console.error("Error checking overdue leads:", error);
@@ -183,6 +184,7 @@ export async function rebalanceOutreachSchedule(
     const { data: rawLeads, error: fetchError } = await supabase
       .from("leads")
       .select("*")
+      .is("cancelled_at", null)
       .order("scheduled_date", { ascending: true });
 
     if (fetchError) throw fetchError;
@@ -288,6 +290,40 @@ export async function rebalanceOutreachSchedule(
     console.error("Rebalance schedule failed:", error);
     return { updated: 0, overdueCount: 0, success: false, error: error?.message || "Failed to rebalance schedule" };
   }
+}
+
+/**
+ * Cancels a single pending email so it's never sent or rescheduled
+ */
+export async function cancelPendingEmail(supabase: any, leadId: string) {
+  return supabase
+    .from("leads")
+    .update({ cancelled_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .is("sent_at", null);
+}
+
+/**
+ * Removes a lead from outreach: cancels every pending email for that contact.
+ * Already-sent emails are kept so the Archive history stays intact.
+ */
+export async function cancelLeadSequence(supabase: any, email: string) {
+  return supabase
+    .from("leads")
+    .update({ cancelled_at: new Date().toISOString() })
+    .eq("email", email)
+    .is("sent_at", null)
+    .is("cancelled_at", null);
+}
+
+/**
+ * Puts a cancelled email back into the pipeline (run a rebalance afterwards to give it a valid date)
+ */
+export async function restoreCancelledEmail(supabase: any, leadId: string) {
+  return supabase
+    .from("leads")
+    .update({ cancelled_at: null })
+    .eq("id", leadId);
 }
 
 /**

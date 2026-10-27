@@ -31,6 +31,7 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("leads")
       .select("scheduled_date, sent_at")
+      .is("cancelled_at", null)
       .gte("scheduled_date", dateStr);
 
     if (error) {

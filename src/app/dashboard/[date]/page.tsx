@@ -9,13 +9,13 @@ import {
   ChevronLeft, Clock, Send, Sparkles,
   CheckCircle2, Loader2,
   Mail, AlertCircle, RotateCcw, MapPin,
-  Copy, ExternalLink, RefreshCw
+  Copy, ExternalLink, RefreshCw, Ban, UserX
 } from "lucide-react";
 import Link from "next/link";
 import { cn, replaceVariables, getGmailLink, getLinkedInUrl } from "@/lib/utils";
 import { TIMEZONE_LABELS, TEMPLATE_KEYS, DEFAULT_TEMPLATES } from "@/lib/constants";
 import { recomposeEmail } from "@/app/actions/ai";
-import { rebalanceOutreachSchedule, useSchedulingConfig } from "@/lib/scheduling";
+import { rebalanceOutreachSchedule, useSchedulingConfig, cancelPendingEmail, cancelLeadSequence } from "@/lib/scheduling";
 
 type Lead = Database["public"]["Tables"]["leads"]["Row"];
 
@@ -129,6 +129,8 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
   const [recomposing, setRecomposing] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [rollingOver, setRollingOver] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState<{ id: string; scope: "email" | "lead" } | null>(null);
+  const [cancelling, setCancelling] = useState<string | null>(null);
 
   async function handleRolloverToToday() {
     setRollingOver(true);
@@ -191,7 +193,7 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
   async function fetchData() {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("leads").select("*").eq("scheduled_date", date);
+      const { data, error } = await supabase.from("leads").select("*").eq("scheduled_date", date).is("cancelled_at", null);
       if (error) throw error;
       setLeads(data || []);
     } catch {
@@ -222,6 +224,30 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
       setLeads(prev => prev.map(l => l.id === leadId ? { ...l, sent_at: null } : l));
       addToast("info", "Lead moved back to pending.");
     }
+  }
+
+  async function handleCancel(lead: Lead, scope: "email" | "lead") {
+    setConfirmCancel(null);
+    setCancelling(lead.id);
+    const { error } = scope === "email"
+      ? await cancelPendingEmail(supabase, lead.id)
+      : await cancelLeadSequence(supabase, lead.email);
+
+    if (error) {
+      addToast("error", "Failed to cancel. Please try again.");
+      setCancelling(null);
+      return;
+    }
+
+    addToast("info", scope === "email"
+      ? `Skipped this email to ${lead.name}.`
+      : `Removed ${lead.name} — no further emails will go out.`);
+
+    // Re-pace the pipeline so the freed slot is filled, then reload today's queue
+    await rebalanceOutreachSchedule(supabase, config);
+    const { data } = await supabase.from("leads").select("*").eq("scheduled_date", date).is("cancelled_at", null);
+    setLeads(data || leads.filter(l => scope === "email" ? l.id !== lead.id : l.email !== lead.email));
+    setCancelling(null);
   }
 
   async function handleRecompose(lead: Lead, stage: string, currentSubject: string, currentBody: string) {
@@ -612,6 +638,45 @@ export default function DailyWorkConsole({ params }: { params: Promise<{ date: s
                           <Send className="h-3 w-3" />
                           <span>Manual Mark as Sent</span>
                         </button>
+
+                        {confirmCancel?.id === lead.id ? (
+                          <div className="p-3 rounded-lg border border-red-500/30 bg-red-500/10 space-y-2">
+                            <p className="text-[10px] font-bold text-red-400 text-center">
+                              {confirmCancel.scope === "email"
+                                ? "Skip this email? It won't be sent."
+                                : `Remove ${firstName}? All pending emails will be cancelled.`}
+                            </p>
+                            <div className="flex items-center space-x-2">
+                              <button
+                                onClick={() => setConfirmCancel(null)}
+                                className="flex-1 py-1.5 text-[10px] font-bold text-[var(--muted)] hover:text-[var(--foreground)] border border-[var(--border)] rounded-md transition-all"
+                              >Cancel</button>
+                              <button
+                                onClick={() => handleCancel(lead, confirmCancel.scope)}
+                                className="flex-1 py-1.5 text-[10px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-md transition-all"
+                              >{confirmCancel.scope === "email" ? "Yes, Skip" : "Yes, Remove"}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center space-x-4">
+                            <button
+                              onClick={() => setConfirmCancel({ id: lead.id, scope: "email" })}
+                              disabled={cancelling === lead.id}
+                              className="flex items-center space-x-1.5 text-[10px] text-[var(--muted)] hover:text-red-400 transition-colors disabled:opacity-30"
+                            >
+                              <Ban className="h-3 w-3" />
+                              <span>Skip Email</span>
+                            </button>
+                            <button
+                              onClick={() => setConfirmCancel({ id: lead.id, scope: "lead" })}
+                              disabled={cancelling === lead.id}
+                              className="flex items-center space-x-1.5 text-[10px] text-[var(--muted)] hover:text-red-400 transition-colors disabled:opacity-30"
+                            >
+                              {cancelling === lead.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserX className="h-3 w-3" />}
+                              <span>Remove Lead</span>
+                            </button>
+                          </div>
+                        )}
                       </>
                     ) : (
                       <div className="flex flex-col items-center space-y-3">

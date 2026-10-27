@@ -118,6 +118,7 @@ export default function LeadImportPage() {
       const { data: existingCounts } = await supabase
         .from("leads")
         .select("scheduled_date")
+        .is("cancelled_at", null)
         .gte("scheduled_date", todayStr);
       
       const countsMap = new Map<string, number>();

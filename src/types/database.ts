@@ -42,6 +42,7 @@ export type Database = {
           timezone: string
           scheduled_date: string
           sent_at: string | null
+          cancelled_at: string | null
           showreel_id: string | null
           ai_pitch: string | null
           created_at: string
@@ -55,6 +56,7 @@ export type Database = {
           timezone: string
           scheduled_date: string
           sent_at?: string | null
+          cancelled_at?: string | null
           showreel_id?: string | null
           ai_pitch?: string | null
           created_at?: string
@@ -68,6 +70,7 @@ export type Database = {
           timezone?: string
           scheduled_date?: string
           sent_at?: string | null
+          cancelled_at?: string | null
           showreel_id?: string | null
           ai_pitch?: string | null
           created_at?: string

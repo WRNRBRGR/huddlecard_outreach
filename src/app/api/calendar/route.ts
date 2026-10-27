@@ -20,6 +20,7 @@ export async function GET(request: Request) {
   const { data, error } = await supabase
     .from("leads")
     .select("scheduled_date, sent_at, ai_pitch")
+    .is("cancelled_at", null)
     .gte("scheduled_date", startDate.toISOString().split('T')[0])
     .lte("scheduled_date", endDate.toISOString().split('T')[0]);
 
